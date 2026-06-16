@@ -12,6 +12,7 @@ import powerFlowRoutes from './routes/powerFlow.js'
 import monitorRoutes from './routes/monitor.js'
 import alarmsRoutes from './routes/alarms.js'
 import streamTestRoutes from './routes/streamTest.js'
+import uflsRoutes from './routes/ufls.js'
 import { redisService } from './services/redisService.js'
 import { mqttClient } from './services/mqttClient.js'
 import { iec104Simulator } from './services/iec104Simulator.js'
@@ -32,6 +33,7 @@ app.use('/api/power-flow', powerFlowRoutes)
 app.use('/api/monitor', monitorRoutes)
 app.use('/api/alarms', alarmsRoutes)
 app.use('/api/stream-test', streamTestRoutes)
+app.use('/api/ufls', uflsRoutes)
 
 app.use(
   '/api/health',

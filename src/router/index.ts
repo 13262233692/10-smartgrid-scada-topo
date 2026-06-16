@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import DispatchPage from '@/pages/DispatchPage.vue'
 import PowerFlowPage from '@/pages/PowerFlowPage.vue'
 import MonitorPage from '@/pages/MonitorPage.vue'
+import UFLSPage from '@/pages/UFLSPage.vue'
 
 const routes = [
   {
@@ -18,6 +19,11 @@ const routes = [
     path: '/monitor',
     name: 'monitor',
     component: MonitorPage,
+  },
+  {
+    path: '/ufls',
+    name: 'ufls',
+    component: UFLSPage,
   },
 ]
 

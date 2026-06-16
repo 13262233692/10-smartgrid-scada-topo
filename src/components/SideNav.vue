@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { Activity, TrendingUp, Monitor, ChevronLeft, ChevronRight } from 'lucide-vue-next'
+import { Activity, TrendingUp, Monitor, Zap, ChevronLeft, ChevronRight } from 'lucide-vue-next'
 
 const route = useRoute()
 const router = useRouter()
@@ -11,6 +11,7 @@ const navItems = [
   { icon: Activity, label: '调度台', path: '/' },
   { icon: TrendingUp, label: '潮流分析', path: '/power-flow' },
   { icon: Monitor, label: '系统监控', path: '/monitor' },
+  { icon: Zap, label: '低频减载', path: '/ufls' },
 ]
 
 function navigate(path: string) {

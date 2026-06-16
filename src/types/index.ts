@@ -80,3 +80,64 @@ export interface ApiResponse<T> {
   success: boolean
   data: T
 }
+
+export type LoadPriority = 'critical' | 'important' | 'ordinary' | 'interruptible'
+
+export interface LoadClassInfo {
+  priority: LoadPriority
+  name: string
+  description: string
+  shedOrder: number
+}
+
+export interface IslandInfo {
+  id: string
+  nodeIds: string[]
+  generatorIds: string[]
+  loadIds: string[]
+  totalGenerationMW: number
+  totalLoadMW: number
+  powerDeficitMW: number
+  frequency: number
+  frequencyRate: number
+  isBlackedOut: boolean
+}
+
+export interface ShedRound {
+  round: number
+  timestamp: number
+  targetFrequency: number
+  actualFrequency: number
+  deficitMW: number
+  sheddedLoadMW: number
+  shedLoadIds: string[]
+  shedLoadClass: LoadPriority
+  description: string
+}
+
+export interface UFLSSimulationState {
+  running: boolean
+  startTime: number
+  currentTime: number
+  initialFaultNodeId: string | null
+  islands: IslandInfo[]
+  shedRounds: ShedRound[]
+  totalSheddedMW: number
+  currentFrequency: number
+  status: 'idle' | 'running' | 'stabilized' | 'blackout'
+  eventLog: { timestamp: number; level: 'info' | 'warning' | 'critical'; message: string }[]
+  disabledNodes: string[]
+  shedLoadNodes: string[]
+}
+
+export interface UFLSConfig {
+  faultNodes: { id: string; name: string; type: string }[]
+  loadClasses: Record<LoadPriority, LoadClassInfo>
+  loadPriorityMap: Record<string, LoadPriority>
+  params: {
+    NOMINAL_FREQUENCY: number
+    FIRST_STAGE_FREQ: number
+    LAST_STAGE_FREQ: number
+    FREQ_RELAY_STEP: number
+  }
+}
