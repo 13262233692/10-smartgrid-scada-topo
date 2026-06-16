@@ -1,5 +1,6 @@
 import mqtt from 'mqtt'
 import { redisService } from './redisService.js'
+import { STREAM_KEYS } from '../types/index.js'
 
 class MqttClientService {
   private client: mqtt.MqttClient | null = null
@@ -21,7 +22,7 @@ class MqttClientService {
       this.client.on('connect', () => {
         console.log('[MQTT] Connected to broker:', brokerUrl)
         this.connected = true
-        this.client!.subscribe('scada/telemetry/#', (err) => {
+        this.client!.subscribe('scada/telemetry/#', { qos: 1 }, (err) => {
           if (err) {
             console.warn('[MQTT] Subscribe failed:', err.message)
           } else {
@@ -30,15 +31,35 @@ class MqttClientService {
         })
       })
 
-      this.client.on('message', (topic, payload) => {
+      this.client.on('message', async (topic, payload) => {
         this.messageCount++
         this.lastUpdate = Date.now()
         const message = payload.toString()
-        redisService.publish('scada:telemetry', JSON.stringify({
-          topic,
-          message,
-          timestamp: Date.now(),
-        }))
+
+        try {
+          const parsed = JSON.parse(message)
+          if (parsed.nodeId && parsed.metrics) {
+            await redisService.streamAdd(STREAM_KEYS.TELEMETRY, {
+              type: 'telemetry',
+              nodeId: parsed.nodeId,
+              metrics: JSON.stringify(parsed.metrics),
+              timestamp: String(parsed.timestamp || Date.now()),
+              quality: parsed.quality || 'good',
+              source: 'mqtt',
+              topic,
+            })
+          }
+        } catch (err: any) {
+          console.warn('[MQTT] Failed to parse message:', err.message)
+          await redisService.streamAdd(STREAM_KEYS.TELEMETRY, {
+            type: 'telemetry',
+            raw: message,
+            topic,
+            timestamp: String(Date.now()),
+            quality: 'invalid',
+            source: 'mqtt',
+          })
+        }
       })
 
       this.client.on('error', (err) => {
@@ -60,15 +81,16 @@ class MqttClientService {
     }
   }
 
-  async publish(topic: string, message: string): Promise<void> {
+  async publish(topic: string, message: string, qos: 0 | 1 | 2 = 1): Promise<void> {
     if (!this.client || !this.connected) {
       return
     }
-    try {
-      this.client.publish(topic, message)
-    } catch (err: any) {
-      console.warn('[MQTT] Publish failed:', err.message)
-    }
+    return new Promise((resolve, reject) => {
+      this.client!.publish(topic, message, { qos }, (err) => {
+        if (err) reject(err)
+        else resolve()
+      })
+    })
   }
 
   isConnected(): boolean {

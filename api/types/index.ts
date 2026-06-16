@@ -2,6 +2,8 @@ export type DeviceType = 'breaker' | 'busbar' | 'transformer' | 'line' | 'genera
 export type DeviceStatus = 'on' | 'off' | 'fault'
 export type LinkType = 'electrical' | 'bus-tie'
 export type DataQuality = 'good' | 'invalid' | 'old'
+export type AlarmLevel = 'info' | 'warning' | 'critical'
+export type StreamMessageType = 'telemetry' | 'alarm' | 'status_change'
 
 export interface TopologyNode {
   id: string
@@ -71,8 +73,43 @@ export interface AlarmRecord {
   id: string
   nodeId: string
   nodeName: string
-  level: 'info' | 'warning' | 'critical'
+  level: AlarmLevel
   message: string
   timestamp: number
   acknowledged: boolean
 }
+
+export interface StatusChangeEvent {
+  nodeId: string
+  nodeName: string
+  fromStatus: DeviceStatus | null
+  toStatus: DeviceStatus
+  reason: string
+  priority: 'critical' | 'high' | 'normal'
+}
+
+export interface StreamMessage {
+  id: string
+  type: StreamMessageType
+  timestamp: number
+  data: TelemetryUpdate | AlarmRecord | StatusChangeEvent
+}
+
+export interface StreamConsumerState {
+  consumerName: string
+  lastDeliveredId: string
+  pendingCount: number
+  lastClaimTime: number
+}
+
+export const STREAM_KEYS = {
+  TELEMETRY: 'stream:telemetry',
+  ALARMS: 'stream:alarms',
+  STATUS_CHANGES: 'stream:status',
+} as const
+
+export const CONSUMER_GROUPS = {
+  TELEMETRY_PROCESSOR: 'telemetry-processor-group',
+  ALARM_DISPATCHER: 'alarm-dispatcher-group',
+  STATUS_MONITOR: 'status-monitor-group',
+} as const

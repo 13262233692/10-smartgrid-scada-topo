@@ -14,17 +14,21 @@ async function start(): Promise<void> {
   iec104Simulator.start()
   console.log('[Server] IEC104 simulator started')
 
-  const interval = setInterval(() => {
+  const statsInterval = setInterval(() => {
     const connections = telemetryService.getSSEConnections().size
-    if (connections > 0) {
-      console.log(`[Server] Active SSE connections: ${connections}`)
+    const stats = telemetryService.getStats()
+    if (connections > 0 || stats.processed > 0) {
+      console.log(
+        `[Server] SSE: ${connections} | Streams: processed=${stats.processed}, acked=${stats.acked}, retries=${stats.retries}, dead=${stats.deadLettered}`
+      )
     }
   }, 30000)
 
   process.on('SIGTERM', () => {
     console.log('SIGTERM signal received')
-    clearInterval(interval)
+    clearInterval(statsInterval)
     iec104Simulator.stop()
+    telemetryService.stop()
     server.close(() => {
       console.log('Server closed')
       process.exit(0)
@@ -33,8 +37,9 @@ async function start(): Promise<void> {
 
   process.on('SIGINT', () => {
     console.log('SIGINT signal received')
-    clearInterval(interval)
+    clearInterval(statsInterval)
     iec104Simulator.stop()
+    telemetryService.stop()
     server.close(() => {
       console.log('Server closed')
       process.exit(0)

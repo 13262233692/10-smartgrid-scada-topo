@@ -11,6 +11,7 @@ import telemetryRoutes from './routes/telemetry.js'
 import powerFlowRoutes from './routes/powerFlow.js'
 import monitorRoutes from './routes/monitor.js'
 import alarmsRoutes from './routes/alarms.js'
+import streamTestRoutes from './routes/streamTest.js'
 import { redisService } from './services/redisService.js'
 import { mqttClient } from './services/mqttClient.js'
 import { iec104Simulator } from './services/iec104Simulator.js'
@@ -30,6 +31,7 @@ app.use('/api/telemetry', telemetryRoutes)
 app.use('/api/power-flow', powerFlowRoutes)
 app.use('/api/monitor', monitorRoutes)
 app.use('/api/alarms', alarmsRoutes)
+app.use('/api/stream-test', streamTestRoutes)
 
 app.use(
   '/api/health',
@@ -61,14 +63,15 @@ export async function initializeServices(): Promise<void> {
   await redisService.connect()
   console.log('[App] Redis service initialized' + (redisService.getIsUsingFallback() ? ' (fallback mode)' : ''))
 
+  await telemetryService.start()
+  console.log('[App] Telemetry stream consumer started')
+
   await mqttClient.connect()
   console.log('[App] MQTT client initialized' + (mqttClient.isConnected() ? '' : ' (unavailable)'))
 
-  iec104Simulator.onData((update) => {
-    telemetryService.processUpdate(update)
-  })
-
   console.log('[App] All services initialized')
 }
+
+export { telemetryService, iec104Simulator, redisService, mqttClient }
 
 export default app
